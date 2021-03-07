@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# values to parse from /etc/os-release
+OS_RELEASE_VALUES=("ID" "VERSION_ID" "VERSION_CODENAME")
+
+# regex for parsing values
+REGEX=""
+for i in ${OS_RELEASE_VALUES[@]}; do
+	REGEX="$REGEX^$i=|"
+done
+REGEX=${REGEX::-1}
+
+# get values
+VALUES=$(cat /etc/os-release | grep -E $REGEX)
+
+# create associative array from VALUES, separating by "="
+declare -A VALUE_LIST
+for i in $(seq 1 $(echo $VALUES | wc -w)); do
+	LINE=$(echo $VALUES | cut -d' ' -f$i)
+	VALUE_LIST[$(echo $LINE | awk -F "=" '{print $1}')]=$(echo $LINE | awk -F "=" '{print $2}')
+done
+echo ${VALUE_LIST["ID"]}
+
+# create hostname from VALUES
+HOSTNAME=""
+for i in ${OS_RELEASE_VALUES[@]};do
+	if [[ -n "${VALUE_LIST["$i"]}" ]]; then
+		HOSTNAME="$HOSTNAME${VALUE_LIST["$i"]}-"
+	fi
+done
+HOSTNAME=${HOSTNAME::-1}
+
+# check for HOSTNAME in /etc/hosts
+grep -qP "127.0.0.1\t$HOSTNAME" /etc/hosts
+
+# if HOSTNAME is not in /etc/hosts then add it
+if [[ $? = 1 ]] ; then
+	echo "127.0.0.1	$HOSTNAME" | sudo tee -a /etc/hosts
+fi
+
+# set hostnamectl to HOSTNAME
+hostnamectl set-hostname --no-ask-password --pretty --transient --static $HOSTNAME | sed 's/"//g'
