@@ -19,7 +19,6 @@ for i in $(seq 1 $(echo $VALUES | wc -w)); do
 	LINE=$(echo $VALUES | cut -d' ' -f$i)
 	VALUE_LIST[$(echo $LINE | awk -F "=" '{print $1}')]=$(echo $LINE | awk -F "=" '{print $2}')
 done
-echo ${VALUE_LIST["ID"]}
 
 # create hostname from VALUES
 HOSTNAME=""
