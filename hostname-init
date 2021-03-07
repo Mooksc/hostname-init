@@ -28,6 +28,7 @@ for i in ${OS_RELEASE_VALUES[@]};do
 	fi
 done
 HOSTNAME=${HOSTNAME::-1}
+HOSTNAME=$(echo $HOSTNAME | sed 's/"//g')
 
 # check for HOSTNAME in /etc/hosts
 grep -qP "127.0.0.1\t$HOSTNAME" /etc/hosts
@@ -38,4 +39,4 @@ if [[ $? = 1 ]] ; then
 fi
 
 # set hostnamectl to HOSTNAME
-hostnamectl set-hostname --no-ask-password --pretty --transient --static $HOSTNAME | sed 's/"//g'
+hostnamectl set-hostname --no-ask-password --pretty --transient --static $HOSTNAME
